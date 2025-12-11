@@ -1,0 +1,4 @@
+WARNING!!!!!!!
+THIS IS NOT OS THIS IS PSEUDOS
+
+by pacua
