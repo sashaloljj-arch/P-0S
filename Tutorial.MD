@@ -24,6 +24,9 @@ if /i "%cmd%"=="firefox" goto browser
 if /i "%cmd%"=="explorer" goto files
 if /i "%cmd%"=="notepad" goto editor
 
+echo %cmd%
+goto prompt
+
 :browser
 start firefox.exe
 goto prompt
