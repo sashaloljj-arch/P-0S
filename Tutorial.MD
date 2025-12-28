@@ -69,6 +69,7 @@ dir
 goto prompt 
 
 and make folder patches
+link for repo https://github.com/sashaloljj-arch/P-INSTALL
 
 thats all
 
