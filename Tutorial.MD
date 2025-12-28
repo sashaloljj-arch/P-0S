@@ -41,7 +41,7 @@ goto prompt
 
 (fourth)custom collors
 were to stay @echo off write
-collor 00
+color 00
 
 This 00 is a digit collor
 
