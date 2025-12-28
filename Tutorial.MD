@@ -1,3 +1,7 @@
+PLEASE LOOK THIS AS COD AND WHEN YOU NOT CAN BASH PLEASE NOT INSTALL
+
+
+
 wellcome to tutorial of install P-OS
 what is p-os
 P-OS is one os where im made on bash 
