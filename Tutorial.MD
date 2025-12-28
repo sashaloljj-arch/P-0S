@@ -53,6 +53,21 @@ thats all digit collor 0=Black 1=Blue 2=Green 3=Cyan 4=Red 5=Purple 6=Yellow 7=G
 
 The first digit is the colour of the command line and the second is the font colour
 
+(five)install repositories
+default is p-install
+
+if /i "%cmd%"=="p-install" goto install
+if /i "%cmd%"=="dir" goto dir
+
+:install
+echo to view patches use dir 
+cd patches
+goto prompt
+
+:dir
+dir
+goto prompt 
+
 thats all
 
 WARNING IM UPDAITING TUTORIAL WHEN IM ADDED NEW FUNCTION
