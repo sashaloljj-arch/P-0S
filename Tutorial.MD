@@ -68,6 +68,8 @@ goto prompt
 dir
 goto prompt 
 
+and make folder patches
+
 thats all
 
 WARNING IM UPDAITING TUTORIAL WHEN IM ADDED NEW FUNCTION
