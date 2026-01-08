@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>os</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .input-section {
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .terminal-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .terminal-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .prompt {
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .input-line {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .output-text {
+            margin-bottom: 8px;
+            line-height: 1.2;
+            white-space: pre-wrap;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .text-page {
+            border: 1px solid #fff;
+            padding: 10px;
+            margin: 10px 0;
+            background: #000;
+            color: #fff;
+            position: relative;
+        }
+
+        .browser-window {
+            background: #000;
+            border: 1px solid #fff;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            height: 50vh;
+        }
+
+        .browser-content {
+            flex-grow: 1;
+            background: white;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        .browser-content.color-mode {
+            filter: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .boot-text {
+            color: #555;
+            font-size: 0.85em;
+        }
+
+        .dir-text { color: #aaa; font-weight: bold; }
+    </style>
+</head>
+<body onclick="document.getElementById('command-input').focus()">
+
+    <div class="input-section">
+        <div class="input-line">
+            <span id="prompt-label" class="prompt">loh login:</span>
+            <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+
+    <div id="terminal-output" class="terminal-container">
+        <div class="output-text">
+            <div class="boot-text">[    0.000000] Linux version 1.0.0-loh (root@build-server)</div>
+            <div class="boot-text">[    0.152430] LOH-FS: mounting root file system... done.</div>
+            <div class="boot-text">-------------------------------------------------------</div>
+            LOH 1.0 (tty1) - 50 Commands Loaded.
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; 
+        let currentMode = "text"; 
+        let loginState = "username"; 
+        let tempUsername = "";
+        let currentDir = "/home/linux";
+
+        let fileSystem = {
+            '/home/linux/readme.txt': 'LIH Operating Host v1.0. Type "help" to see all 50 commands.',
+            '/home/linux/notes.txt': 'Remember to check the mode command for color browsing.',
+            '/etc/version': 'LOH 1.0.0-stable'
+        };
+
+        const input = document.getElementById('command-input');
+        const output = document.getElementById('terminal-output');
+        const promptLabel = document.getElementById('prompt-label');
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim();
+                handleInput(val);
+                input.value = '';
+            }
+        });
+
+        function handleInput(val) {
+            if (loginState === "username") {
+                tempUsername = val;
+                prependToTerminal(`<span class="prompt">loh login:</span> ${val}`);
+                promptLabel.innerText = "Password:";
+                input.type = "password";
+                loginState = "password";
+            } else if (loginState === "password") {
+                if (tempUsername === "linux" && val === "linux") {
+                    prependToTerminal(`<span class="prompt">Password:</span> ********`);
+                    loginState = "loggedIn";
+                    promptLabel.innerText = "linux@loh:~#";
+                    input.type = "text";
+                    prependToTerminal(`Welcome to LOH 1.0. Type "commands" for the full list.`);
+                } else {
+                    prependToTerminal(`Login incorrect`);
+                    promptLabel.innerText = "loh login:";
+                    input.type = "text";
+                    loginState = "username";
+                }
+            } else {
+                if (val) processCommand(val);
+                else prependToTerminal(`<span class="prompt">linux@loh:~#</span>`);
+            }
+        }
+
+        async function processCommand(raw) {
+            const parts = raw.split(/\s+/);
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1];
+            prependToTerminal(`<span class="prompt">linux@loh:~#</span> ${raw}`);
+
+            switch (cmd) {
+                // --- CATEGORY: HELP & LISTS ---
+                case 'help': prependToTerminal('Try "commands" to see all 50 available commands.'); break;
+                case 'commands':
+                    prependToTerminal(`
+FILE SYSTEM: ls, cd, pwd, cat, touch, mkdir, rm, mv, cp, find, du, df, tree, stat, echo
+SYSTEM: neofetch, loh, uptime, whoami, hostname, uname, top, ps, free, lscpu, dmesg, history, alias, clear, exit
+NETWORK: ping, wget, browser, mode, curl, ip, host, nslookup, ifconfig, netstat
+UTILITIES: calc, date, cal, uptime, figlet, cowsay, fortune, base64, wc, grep, rev
+SESSION: logout, reboot, shutdown
+                    `);
+                    break;
+
+                // --- CATEGORY: FILE SYSTEM ---
+                case 'ls':
+                    let files = Object.keys(fileSystem)
+                        .filter(f => f.startsWith(currentDir))
+                        .map(f => f.replace(currentDir + '/', ''));
+                    prependToTerminal(files.length ? files.join('  ') : '(Empty directory)');
+                    break;
+                case 'pwd': prependToTerminal(currentDir); break;
+                case 'cd': 
+                    if (!arg || arg === '~') currentDir = "/home/linux";
+                    else if (arg === '..') currentDir = "/home";
+                    else prependToTerminal(`cd: ${arg}: No such directory`);
+                    break;
+                case 'cat':
+                    let path = arg?.startsWith('/') ? arg : `${currentDir}/${arg}`;
+                    if (fileSystem[path]) prependToTerminal(fileSystem[path]);
+                    else prependToTerminal(`cat: ${arg}: No such file`);
+                    break;
+                case 'touch': 
+                    if (arg) { fileSystem[`${currentDir}/${arg}`] = ""; prependToTerminal(`Created ${arg}`); }
+                    break;
+                case 'mkdir': prependToTerminal(`mkdir: created directory '${arg}'`); break;
+                case 'rm': prependToTerminal(`Removed ${arg}`); break;
+                case 'mv': prependToTerminal(`Moved ${arg} to ${parts[2]}`); break;
+                case 'cp': prependToTerminal(`Copied ${arg}`); break;
+                case 'echo': prependToTerminal(parts.slice(1).join(' ')); break;
+                case 'wc': prependToTerminal(`1 4 24 ${arg}`); break;
+                case 'grep': prependToTerminal(`Searching for pattern in ${arg}...`); break;
+                case 'rev': prependToTerminal(parts.slice(1).join(' ').split('').reverse().join('')); break;
+                case 'tree': prependToTerminal(`.\n└── home\n    └── linux\n        ├── readme.txt\n        └── notes.txt`); break;
+                case 'stat': prependToTerminal(`File: ${arg}\nSize: 1024 Blocks: 8 IO Block: 4096 regular file`); break;
+
+                // --- CATEGORY: SYSTEM INFO ---
+                case 'neofetch':
+                case 'loh':
+                    prependToTerminal(`OS: LOH 1.0<br>Kernel: 1.0.0-mono<br>Uptime: 5m<br>Shell: bash<br>WM: Monochrome`);
+                    break;
+                case 'uptime': prependToTerminal(`22:14:02 up 5 min, 1 user, load average: 0.00, 0.01, 0.05`); break;
+                case 'whoami': prependToTerminal('linux'); break;
+                case 'hostname': prependToTerminal('loh-virtual-machine'); break;
+                case 'uname': prependToTerminal('Linux loh 1.0.0-mono x86_64'); break;
+                case 'top': prependToTerminal(`PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND\n1 root 20 0 128M 2M 1M S 0.0 0.1 0:01.02 init`); break;
+                case 'ps': prependToTerminal(`PID TTY TIME CMD\n 432 tty1 00:00:00 bash\n 501 tty1 00:00:00 ps`); break;
+                case 'free': prependToTerminal(`total used free shared buff/cache available\nMem: 2048 512 1024 10 512 1536`); break;
+                case 'lscpu': prependToTerminal(`Architecture: x86_64\nCPU(s): 1\nModel name: Virtual LOH Processor`); break;
+                case 'dmesg': prependToTerminal(`[0.000] Booting LOH...\n[0.100] Mounting FS...`); break;
+                case 'history': prependToTerminal(`1 ls\n2 cd ..\n3 cat readme.txt\n4 neofetch`); break;
+                case 'df': prependToTerminal(`Filesystem 1K-blocks Used Available Use% Mounted on\n/dev/sda1 20G 2G 18G 10% /`); break;
+                case 'du': prependToTerminal(`4.0K ${currentDir}`); break;
+                case 'stat': prependToTerminal(`File: ${arg}\nAccess: (0644/-rw-r--r--)`); break;
+
+                // --- CATEGORY: UTILITIES ---
+                case 'calc':
+                    if (parts.length < 4) {
+                        prependToTerminal('Usage: calc [num1] [operator] [num2] (e.g., calc 5 + 3)');
+                    } else {
+                        const n1 = parseFloat(parts[1]);
+                        const op = parts[2];
+                        const n2 = parseFloat(parts[3]);
+                        let res;
+                        if (isNaN(n1) || isNaN(n2)) res = "Error: Invalid numbers";
+                        else {
+                            if (op === '+') res = n1 + n2;
+                            else if (op === '-') res = n1 - n2;
+                            else if (op === '*' || op === 'x') res = n1 * n2;
+                            else if (op === '/') res = n2 !== 0 ? n1 / n2 : "Error: Division by zero";
+                            else res = "Error: Invalid operator (use +, -, *, /)";
+                        }
+                        prependToTerminal(`${n1} ${op} ${n2} = ${res}`);
+                    }
+                    break;
+                case 'date': prependToTerminal(new Date().toString()); break;
+                case 'cal': prependToTerminal(`    January 2026\nSu Mo Tu We Th Fr Sa\n             1  2  3\n 4  5  6  7  8  9 10`); break;
+                case 'cowsay': prependToTerminal(`< ${parts.slice(1).join(' ') || 'Moo'} >\n ------\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||`); break;
+                case 'fortune': prependToTerminal(`"A clean terminal is the sign of a clear mind." - LOH Proverb`); break;
+                case 'figlet': prependToTerminal(` _      ____  _   _ \n| |    / __ \\| | | |\n| |   | |  | | |_| |\n| |___| |__| |  _  |\n|______\\____/|_| |_|`); break;
+                case 'base64': prependToTerminal(btoa(parts.slice(1).join(' '))); break;
+                case 'alias': prependToTerminal(`alias ll='ls -la'\nalias fetch='neofetch'`); break;
+
+                // --- CATEGORY: NETWORK ---
+                case 'ping': prependToTerminal(`PING ${arg || 'google.com'} (142.250.190.46): 56 data bytes\n64 bytes from 142.250.190.46: icmp_seq=0 ttl=117 time=12.4 ms`); break;
+                case 'curl':
+                case 'wget':
+                case 'browser':
+                    if (currentMode === "text") await handleWebAction(arg);
+                    else openGraphicalBrowser(arg, currentMode === "color");
+                    break;
+                case 'mode':
+                    if (currentMode === "text") currentMode = "graphical";
+                    else if (currentMode === "graphical") currentMode = "color";
+                    else currentMode = "text";
+                    prependToTerminal(`Browser mode: ${currentMode}`);
+                    break;
+                case 'ip': prependToTerminal(`1: lo: <LOOPBACK> mtu 65536\n    inet 127.0.0.1/8 scope host lo`); break;
+                case 'host': prependToTerminal(`${arg} has address 93.184.216.34`); break;
+                case 'nslookup': prependToTerminal(`Server: 8.8.8.8\nAddress: 8.8.8.8#53\nNon-authoritative answer:\nName: ${arg}`); break;
+                case 'ifconfig': prependToTerminal(`eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST> mtu 1500\ninet 192.168.1.15`); break;
+                case 'netstat': prependToTerminal(`Active Internet connections\nProto Recv-Q Send-Q Local Address Foreign Address State\ntcp 0 0 loh:ssh 192.168.1.5:54321 ESTABLISHED`); break;
+
+                // --- CATEGORY: SESSION ---
+                case 'clear': output.innerHTML = ''; break;
+                case 'logout':
+                case 'exit':
+                    loginState = "username";
+                    promptLabel.innerText = "loh login:";
+                    prependToTerminal("Session terminated.");
+                    break;
+                case 'reboot': location.reload(); break;
+                case 'shutdown': prependToTerminal("System is going down for power off NOW!"); break;
+
+                default: prependToTerminal(`-bash: ${cmd}: command not found`);
+            }
+        }
+
+        async function handleWebAction(url) {
+            if (!url) { prependToTerminal('Usage: wget [url]'); return; }
+            prependToTerminal(`Connecting to ${url}...`);
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `URL: ${url}` }] }],
+                        systemInstruction: { parts: [{ text: "Extract text content from the URL." }] },
+                        tools: [{ "google_search": {} }]
+                    })
+                });
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    prependToTerminal(`<div class="text-page">${text.replace(/\n/g, '<br>')}</div>`);
+                }
+            } catch (e) { prependToTerminal(`wget: error`); }
+        }
+
+        function openGraphicalBrowser(url, isColor) {
+            if (!url) return;
+            let target = url.startsWith('http') ? url : 'https://' + url;
+            prependToTerminal(`
+                <div class="browser-window">
+                    <div style="padding:2px; border-bottom:1px solid #fff; display:flex; justify-content:space-between; font-size: 0.8em;">
+                        <span>URL: ${target}</span>
+                    </div>
+                    <div class="browser-content ${isColor ? 'color-mode' : ''}"><iframe src="${target}"></iframe></div>
+                </div>`);
+        }
+
+        function prependToTerminal(text) {
+            const div = document.createElement('div');
+            div.className = "output-text";
+            div.innerHTML = text;
+            output.insertBefore(div, output.firstChild);
+        }
+    </script>
+</body>
+</html>
